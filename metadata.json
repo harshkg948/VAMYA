@@ -1,0 +1,6 @@
+{
+  "name": "VAMYA - AI Tech & Product Design Multi-Agent System",
+  "description": "Autonomous multi-agent runtime orchestrating task planning, research discovery, knowledge graphs, verification, analysis & reasoning, and decision planning for technology and product design.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

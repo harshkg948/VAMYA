@@ -1,0 +1,107 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidProject(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() <= 200
+        && data.ownerId is string && data.ownerId == request.auth.uid
+        && data.status in ['draft', 'active', 'completed', 'archived'];
+    }
+
+    match /projects/{projectId} {
+      allow get: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() 
+        && isValidId(projectId) 
+        && incoming().ownerId == request.auth.uid
+        && isValidProject(incoming());
+      allow update: if isSignedIn() 
+        && isValidId(projectId) 
+        && resource.data.ownerId == request.auth.uid
+        && incoming().ownerId == resource.data.ownerId
+        && isValidProject(incoming());
+      allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+
+      // Subcollection: agent_runs
+      match /agent_runs/{runId} {
+        allow get, list: if isSignedIn() 
+          && get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid;
+        allow create: if isSignedIn() 
+          && isValidId(runId)
+          && incoming().ownerId == request.auth.uid
+          && incoming().projectId == projectId
+          && get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid;
+        allow update: if isSignedIn() 
+          && isValidId(runId)
+          && resource.data.ownerId == request.auth.uid
+          && incoming().ownerId == resource.data.ownerId
+          && get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid;
+        allow delete: if isSignedIn() 
+          && resource.data.ownerId == request.auth.uid;
+      }
+
+      // Subcollection: knowledge_nodes
+      match /knowledge_nodes/{nodeId} {
+        allow get, list: if isSignedIn() 
+          && get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid;
+        allow create, update: if isSignedIn() 
+          && isValidId(nodeId)
+          && incoming().ownerId == request.auth.uid
+          && incoming().projectId == projectId
+          && get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid;
+        allow delete: if isSignedIn() 
+          && resource.data.ownerId == request.auth.uid;
+      }
+
+      // Subcollection: google_tasks
+      match /google_tasks/{taskId} {
+        allow get, list: if isSignedIn() 
+          && get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid;
+        allow create, update: if isSignedIn() 
+          && isValidId(taskId)
+          && incoming().ownerId == request.auth.uid
+          && incoming().projectId == projectId
+          && get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid;
+        allow delete: if isSignedIn() 
+          && resource.data.ownerId == request.auth.uid;
+      }
+
+      // Subcollection: harness_results
+      match /harness_results/{resultId} {
+        allow get, list: if isSignedIn() 
+          && get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid;
+        allow create, update: if isSignedIn() 
+          && isValidId(resultId)
+          && incoming().ownerId == request.auth.uid
+          && get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid;
+        allow delete: if isSignedIn() 
+          && resource.data.ownerId == request.auth.uid;
+      }
+    }
+  }
+}

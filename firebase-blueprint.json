@@ -1,0 +1,98 @@
+{
+  "entities": {
+    "Project": {
+      "title": "Project",
+      "description": "Technology and product design project created by the authenticated user",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 2000 },
+        "domain": { "type": "string", "maxLength": 100 },
+        "status": { "type": "string", "enum": ["draft", "active", "completed", "archived"] },
+        "ownerId": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "ownerId", "status"]
+    },
+    "AgentRun": {
+      "title": "AgentRun",
+      "description": "VAMYA multi-agent pipeline execution record",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "prompt": { "type": "string", "maxLength": 5000 },
+        "status": { "type": "string", "enum": ["queued", "running", "completed", "failed"] },
+        "currentAgent": { "type": "string", "maxLength": 100 },
+        "ownerId": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["projectId", "prompt", "status", "ownerId"]
+    },
+    "KnowledgeNode": {
+      "title": "KnowledgeNode",
+      "description": "Entities in the product knowledge graph synthesized by Knowledge Graph Agent",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "label": { "type": "string", "maxLength": 200 },
+        "category": { "type": "string", "maxLength": 100 },
+        "summary": { "type": "string", "maxLength": 2000 },
+        "ownerId": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["projectId", "label", "category", "ownerId"]
+    },
+    "GoogleTaskSync": {
+      "title": "GoogleTaskSync",
+      "description": "Synced tasks mapped to user's Google Tasks",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "googleTaskId": { "type": "string", "maxLength": 200 },
+        "title": { "type": "string", "maxLength": 500 },
+        "status": { "type": "string", "enum": ["needsAction", "completed"] },
+        "ownerId": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["projectId", "title", "ownerId"]
+    },
+    "HarnessResult": {
+      "title": "HarnessResult",
+      "description": "Benchmark evaluation harness output for multi-agent system verification",
+      "type": "object",
+      "properties": {
+        "testCaseId": { "type": "string", "maxLength": 100 },
+        "testName": { "type": "string", "maxLength": 200 },
+        "status": { "type": "string", "enum": ["passed", "failed", "warning"] },
+        "score": { "type": "number" },
+        "ownerId": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["testCaseId", "status", "score", "ownerId"]
+    }
+  },
+  "firestore": {
+    "/projects/{projectId}": {
+      "schema": { "$ref": "#/entities/Project" },
+      "description": "User technology and product design projects"
+    },
+    "/projects/{projectId}/agent_runs/{runId}": {
+      "schema": { "$ref": "#/entities/AgentRun" },
+      "description": "Pipeline execution logs and responses for each agent"
+    },
+    "/projects/{projectId}/knowledge_nodes/{nodeId}": {
+      "schema": { "$ref": "#/entities/KnowledgeNode" },
+      "description": "Knowledge graph entities linked to the project"
+    },
+    "/projects/{projectId}/google_tasks/{taskId}": {
+      "schema": { "$ref": "#/entities/GoogleTaskSync" },
+      "description": "Action items and tasks synchronized with Google Tasks"
+    },
+    "/projects/{projectId}/harness_results/{resultId}": {
+      "schema": { "$ref": "#/entities/HarnessResult" },
+      "description": "Agent evaluation harness benchmark logs"
+    }
+  }
+}
